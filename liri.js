@@ -41,8 +41,21 @@ switch (typeExecution) {
 
 
 function myTweets() {
-	console.log(Twitter);
-
+	client.get('statuses/user_timeline', {screen_name: 'JoshUMCode'}, function(error, tweets, response){
+		if (error){
+			console.log(error.message)
+		}
+		var len = tweets.length
+		if (len > 19){
+			for (var i = 0; i < 20; i++){
+				console.log(tweets[i].created_at, tweets[i].text);
+			}	
+		} else {
+			for ( var i = 0; i < len; i++){
+				console.log(tweets[i].created_at, tweets[i].text);
+			}
+		}
+	});
 }
 
 function spotifySong() {
