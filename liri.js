@@ -42,7 +42,6 @@ switch (typeExecution) {
 
 function myTweets() {
 	console.log(Twitter);
-	
 
 }
 
