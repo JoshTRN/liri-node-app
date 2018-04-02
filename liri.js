@@ -65,16 +65,37 @@ function spotifySong() {
 
 	if (len > 3) {
 		for (var i = 3; i < len; i++){
-			if (i < len - 1 && songTitle !== ''){
-				songTitle = songTitle + ' ' + process.argv[i];
-			} else {
+			if (i === 3) {
 				songTitle = process.argv[i];
-			}
+
+			} else if (i < len) {
+				songTitle = songTitle + ' ' + process.argv[i];
+
+			} //else {
+			// 	songTitle = process.argv[i];
+			// }
 		}
-	} else {
+	} else if (songTitle === '') {
 		console.log('Please add a song title.');
 	}
-	console.log(songTitle);
+	
+	spotify.search({ type: 'track', query: songTitle })
+		.then(function(response) {
+
+			var artist = 'Artist: ' + response.tracks.items[0].album.artists[0].name;
+			var preview = 'Preview URL: ' + response.tracks.items[0].preview_url
+			var songName = 'Song Name: ' + response.tracks.items[0].name;
+			var album = 'Album Name: ' + response.tracks.items[0].album.name;
+			console.log('\n');
+			console.log(artist);
+			console.log(preview);
+			console.log(songName);
+			console.log(album);
+			console.log('\n');
+		})
+		.catch(function(err) {
+			console.log(err);
+		});
 }
 
 function getMovie() {
@@ -90,7 +111,7 @@ function getMovie() {
 				movieTitle = process.argv[i];
 			}
 		}
-	} else {
+	} else if (movieTitle === '') {
 		console.log('Please add a movie title.');
 	}	
 	// Log to make sure functioning.
