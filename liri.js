@@ -71,9 +71,7 @@ function spotifySong() {
 			} else if (i < len) {
 				songTitle = songTitle + ' ' + process.argv[i];
 
-			} //else {
-			// 	songTitle = process.argv[i];
-			// }
+			} 
 		}
 	} else if (songTitle === '') {
 		console.log('Please add a song title.');
