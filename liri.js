@@ -5,6 +5,8 @@ var keys = require('./keys')
 var Spotify = require('node-spotify-api');
 var Twitter = require('twitter');
 var inquirer = require('inquirer');
+var request = require('request');
+var fs = require('fs');
 
 var spotify = new Spotify(keys.spotify);
 var client = new Twitter(keys.twitter);
@@ -16,7 +18,7 @@ var tweets = 'my-tweets';
 var song = 'spotify-this-song';
 var movie = 'movie-this'
 
-//===============Song and Movie Varriables=============//
+//===============Song and Movie Variables=============//
 var movieTitle = '';
 var songTitle = '';
 
@@ -32,27 +34,30 @@ switch (typeExecution) {
 		getMovie();
 		break;
 	default:
-		initInquier();
+		initInquirer();
 }
 
 
 
 //===============Functions=============//
 
+function log(item) {
+	console.log(item);
+}
 
 function myTweets() {
 	client.get('statuses/user_timeline', {screen_name: 'JoshUMCode'}, function(error, tweets, response){
 		if (error){
-			console.log(error.message)
+			log(error.message)
 		}
 		var len = tweets.length
 		if (len > 19){
 			for (var i = 0; i < 20; i++){
-				console.log(tweets[i].created_at, tweets[i].text);
+				log(tweets[i].created_at, tweets[i].text);
 			}	
 		} else {
 			for ( var i = 0; i < len; i++){
-				console.log(tweets[i].created_at, tweets[i].text);
+				log(tweets[i].created_at, tweets[i].text);
 			}
 		}
 	});
@@ -74,7 +79,7 @@ function spotifySong() {
 			} 
 		}
 	} else if (songTitle === '') {
-		console.log('Please add a song title.');
+		log('Please add a song title.');
 	}
 	
 	spotify.search({ type: 'track', query: songTitle })
@@ -84,15 +89,16 @@ function spotifySong() {
 			var preview = 'Preview URL: ' + response.tracks.items[0].preview_url
 			var songName = 'Song Name: ' + response.tracks.items[0].name;
 			var album = 'Album Name: ' + response.tracks.items[0].album.name;
-			console.log('\n');
-			console.log(artist);
-			console.log(preview);
-			console.log(songName);
-			console.log(album);
-			console.log('\n');
+	
+			log('\n');
+			log(artist);
+			log(preview);
+			log(songName);
+			log(album);
+			log('\n');
 		})
 		.catch(function(err) {
-			console.log(err);
+			log(err);
 		});
 }
 
@@ -104,20 +110,42 @@ function getMovie() {
 	if (len > 3) {
 		for (var i = 3; i < len; i++){
 			if (i < len && movieTitle !== ''){
-				movieTitle = movieTitle + ' ' + process.argv[i];
+				movieTitle = movieTitle; + '+' + process.argv[i].toLowerCase();
 			} else {
-				movieTitle = process.argv[i];
+				movieTitle = process.argv[i].toLowerCase();
 			}
 		}
 	} else if (movieTitle === '') {
-		console.log('Please add a movie title.');
+		log('Please add a movie title.');
 	}	
 	// Log to make sure functioning.
-	console.log(movieTitle);
+	// log(movieTitle);
+
+	var queryURL = 'http://www.omdbapi.com/?apikey=395b87e4&t='	+ movieTitle;
+	request(queryURL, function(error, response, body){
+
+		movieObj = JSON.parse(body);
+		// * Title of the movie.
+		// * Year the movie came out.
+		// * IMDB Rating of the movie.
+		// * Rotten Tomatoes Rating of the movie.
+		// * Country where the movie was produced.
+		// * Language of the movie.
+		// * Plot of the movie.
+		// * Actors in the movie.
+		log("* Title: " + movieObj.Title);
+		log("* Year Released: " + movieObj.Year);
+		log("* IMDB rating: " + movieObj.Ratings[0].Value);
+		log("* Rotten Tomatoes rating: " + movieObj.Ratings[1].Value);
+		log("* Country: " + movieObj.Country);
+		log("* Language: " + movieObj.Language);
+		log("\n* Plot: " + movieObj.Plot + "\n");
+		log("* Actors: " + movieObj.Actors);
+	})
 
 }
 
-function initInquier() {
+function initInquirer() {
 	inquirer.prompt([
 		{
 			type: 'list',
@@ -163,7 +191,15 @@ function inquireMovie() {
 			name: 'movieTitle'
 		}
 		]).then(function(response){
-			songTitle = response.movieTitle;
+			titleList =response.movieTitle.split(' ');
+			var len = titleList.length;
+			for (var i = 0; i < len; i++){
+				if (i === 0){
+					movieTitle += titleList[i].toLowerCase();
+				} else {
+					movieTitle = movieTitle + '+' + titleList[i].toLowerCase();	
+				}
+			}
 			getMovie();
-		})
+	});
 }
