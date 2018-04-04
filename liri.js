@@ -7,6 +7,7 @@ var Twitter = require('twitter');
 var inquirer = require('inquirer');
 var request = require('request');
 var fs = require('fs');
+var moment = require('moment');
 
 var spotify = new Spotify(keys.spotify);
 var client = new Twitter(keys.twitter);
@@ -19,10 +20,12 @@ var song = 'spotify-this-song';
 var movie = 'movie-this'
 
 //===============Song and Movie Variables=============//
+
 var movieTitle = '';
 var songTitle = '';
 
 //===============Handler for Terminal Input=============//
+
 switch (typeExecution) {
 	case tweets:
 		myTweets();
@@ -37,33 +40,78 @@ switch (typeExecution) {
 		initInquirer();
 }
 
-
-
 //===============Functions=============//
 
 function log(item) {
 	console.log(item);
 }
 
-function myTweets() {
-	client.get('statuses/user_timeline', {screen_name: 'JoshUMCode'}, function(error, tweets, response){
-		if (error){
-			log(error.message)
-		}
-		var len = tweets.length
-		if (len > 19){
-			for (var i = 0; i < 20; i++){
-				log(tweets[i].created_at, tweets[i].text);
-			}	
-		} else {
-			for ( var i = 0; i < len; i++){
-				log(tweets[i].created_at, tweets[i].text);
-			}
+function newLine(){
+	fs.appendFile('log.txt', '\n', 'utf8', function(err){
+		if (err) {
+			console.log(err);
 		}
 	});
 }
 
+function appendType(type) {
+	fs.appendFile('log.txt', type, 'utf8', function(err) {
+		if (err) {
+			console.log(err);
+		}
+	});
+	newLine();
+}
+
+function newContent(content) {
+	fs.appendFile('log.txt', content, 'utf8', function(err) {
+		if (err) {
+			console.log(err);
+		}
+	});
+	newLine();
+}
+
+function myTweets() {
+	var tweetType = "========== Tweet Search ==========";
+	appendType(tweetType);
+	newLine();
+
+	client.get('statuses/user_timeline', {screen_name: 'JoshUMCode'}, function(error, tweets, response){
+		if (error){
+			log(error.message)
+		}
+
+		var len = tweets.length;
+
+		if (len > 19){
+			for (var i = 0; i < 20; i++){
+				var name = tweets[0].user.name;
+				var tweetDate = moment(tweets[i].created_at).format('MMM Do YYYY');
+				var tweetTime = moment(tweets[i].created_at).format('h:mm a');
+				var tweet = tweets[i].text;
+				var output = "At " + tweetTime + ' on ' + tweetDate + ' ' + name + ' tweeted: ' + tweet;
+				log(output);
+				newContent(output)
+			}	
+		} else {
+			for ( var i = 0; i < len; i++){
+				var name = tweets[0].user.name;
+				var tweetDate = moment(tweets[i].created_at).format('MMM Do YYYY');
+				var tweetTime = moment(tweets[i].created_at).format('h:mm a');
+				var tweet = tweets[i].text;
+				var output = "At " + tweetTime + ' on ' + tweetDate + ' ' + name + ' tweeted: ' + tweet;
+				log(output);
+				newContent(output)
+			}
+		}
+		newLine();
+	});
+}
+
 function spotifySong() {
+	var trackInfo = "========== Spotify Track Searched ==========";
+	appendType(trackInfo);
 	// Refer to console input to extract the song title and store it into
 	// songTitle variable.
 	var len = process.argv.length
@@ -96,6 +144,13 @@ function spotifySong() {
 			log(songName);
 			log(album);
 			log('\n');
+			
+			newLine();
+			newContent(artist);
+			newContent(preview);
+			newContent(songName);
+			newContent(album);
+			newLine();
 		})
 		.catch(function(err) {
 			log(err);
@@ -103,6 +158,8 @@ function spotifySong() {
 }
 
 function getMovie() {
+	var movieInfo = "========== Movie Searched ==========";
+	appendType(movieInfo);
 	// Refer to console input to extract the song title and store it into
 	// movieTitle variable.
 	var len = process.argv.length
@@ -133,6 +190,7 @@ function getMovie() {
 		// * Language of the movie.
 		// * Plot of the movie.
 		// * Actors in the movie.
+		log('\n');
 		log("* Title: " + movieObj.Title);
 		log("* Year Released: " + movieObj.Year);
 		log("* IMDB rating: " + movieObj.Ratings[0].Value);
@@ -141,6 +199,17 @@ function getMovie() {
 		log("* Language: " + movieObj.Language);
 		log("\n* Plot: " + movieObj.Plot + "\n");
 		log("* Actors: " + movieObj.Actors);
+		log('\n');
+
+		newContent("* Title: " + movieObj.Title);
+		newContent("* Year Released: " + movieObj.Year);
+		newContent("* IMDB rating: " + movieObj.Ratings[0].Value);
+		newContent("* Rotten Tomatoes rating: " + movieObj.Ratings[1].Value);
+		newContent("* Country: " + movieObj.Country);
+		newContent("* Language: " + movieObj.Language);
+		newContent("\n* Plot: " + movieObj.Plot + "\n");
+		newContent("* Actors: " + movieObj.Actors);
+		newLine();		
 	})
 
 }
@@ -191,7 +260,7 @@ function inquireMovie() {
 			name: 'movieTitle'
 		}
 		]).then(function(response){
-			titleList =response.movieTitle.split(' ');
+			titleList = response.movieTitle.split(' ');
 			var len = titleList.length;
 			for (var i = 0; i < len; i++){
 				if (i === 0){
